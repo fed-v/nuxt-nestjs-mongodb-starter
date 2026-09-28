@@ -1,6 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   devtools: { enabled: true },
+  compatibilityDate: '2026-09-27',
 
   // https://www.joshwcomeau.com/css/custom-css-reset/
   css: [
