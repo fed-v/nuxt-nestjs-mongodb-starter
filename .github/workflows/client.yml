@@ -45,21 +45,50 @@ jobs:
       # `--run` = run once and exit (plain `vitest` waits in watch mode).
       - run: npm test -- --run
 
-  # Builds the production Docker image to prove the Dockerfile works.
-  # Nothing is published yet.
-  build:
-    # Jobs run in parallel by default. `needs` makes this wait for `test`,
-    # and skips it entirely if `test` fails.
+  # Builds the production Docker image and publishes it to GitHub Container
+  # Registry (ghcr.io). Nothing runs anywhere: another system would pull it.
+  publish:
+    # Wait for `test`; skipped entirely if `test` fails.
     needs: test
+    # Only publish from main. Without this, every branch push would publish.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
+    # Job-level permissions REPLACE the workflow-level ones, so contents: read
+    # is restated. `packages: write` lets the token push to ghcr.io.
+    permissions:
+      contents: read
+      packages: write
+
     steps:
       # Each job gets its own fresh VM, so it must check out the code again.
-      # Nothing carries over from the `test` job.
       - uses: actions/checkout@v7
 
-      # Plain `docker build`: a CI step is just a shell command.
-      # --target production builds the last stage of client/Dockerfile.
-      # ./client is the build context (the folder Docker can see).
-      - run: docker build --target production --tag client:ci ./client
+      # Logs in to ghcr.io with the run's own short-lived token.
+      # No personal access token and no stored secret needed.
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Works out the image tags and labels from the commit, e.g.
+      # ghcr.io/<owner>/<repo>/client:sha-a1b2c3d and :latest. It also adds the
+      # label that links the package back to this repository.
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository }}/client
+          tags: |
+            type=sha
+            type=raw,value=latest
+
+      # Same build as before (target + context), but now it also pushes.
+      - uses: docker/build-push-action@v7
+        with:
+          context: ./client
+          target: production
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
