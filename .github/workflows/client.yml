@@ -1,0 +1,28 @@
+name: Client
+
+# Run on every push to any branch.
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest # A fresh, empty VM for every run.
+
+    defaults:
+      run:
+        # package.json lives in client/, not the repo root.
+        working-directory: client
+
+    steps:
+      # The VM starts empty. This downloads your repo onto it.
+      - uses: actions/checkout@v7
+
+      # Nuxt 4.5 needs Node >= 22.19.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      # Installs exactly what package-lock.json says.
+      - run: npm ci
+
+      # `--run` = run once and exit (plain `vitest` waits in watch mode).
+      - run: npm test -- --run
