@@ -17,7 +17,7 @@ The frontend uses a centralized `useApi()` composable instead of scattered `fetc
 
 ### 2. Consistent Backend Response Format
 
-The backend wraps all successful responses and errors in a shared API format. Controllers can return simple data, while a global interceptor formats successful responses and a global exception filter formats errors. This gives the frontend one predictable response contract. Test
+The backend wraps all successful responses and errors in a shared API format. Controllers can return simple data, while a global interceptor formats successful responses and a global exception filter formats errors. This gives the frontend one predictable response contract.
 
 ### 3. Global Request Validation
 
