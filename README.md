@@ -31,6 +31,10 @@ Dedicated `GET /health` endpoint checks API uptime and MongoDB availability, mak
 
 The backend includes simple global request logging to make debugging easier during development and production support. Each request logs a request ID, method, path, status code, and duration, while skipping sensitive data such as bodies and auth tokens. Logging is built on Nest’s native logger and can be configured through environment variables.
 
+### 6. GitHub Actions CI/CD
+
+A GitHub Actions workflow (`.github/workflows/client.yml`) covers the client. On every push that touches `client/` (or from the manual "Run workflow" button), it runs the Vitest suite on Node 22 with a clean `npm ci` install. When that passes on `main`, a second job builds the client's production Docker image and publishes it to GitHub Container Registry (`ghcr.io`), tagged with the commit SHA and `latest`, so any host can pull it. The workflow uses least-privilege token permissions and cancels superseded runs on feature branches. Only the client is covered so far, and deploying the published image to a host is left to whichever service you use.
+
 ## Docker
 
 Create and start the development container:
