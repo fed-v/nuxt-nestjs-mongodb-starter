@@ -1,7 +1,17 @@
 name: Client
 
-# Run on every push to any branch.
-on: push
+# Trigger: runs on a push to any branch, but only if the client or this
+# workflow file changed. The manual button runs it without needing a push.
+on:
+  push:
+    paths:
+      - "client/**"
+      - ".github/workflows/client.yml" # Editing this file should re-run it.
+  workflow_dispatch:
+
+# The built-in GITHUB_TOKEN is read-only. A job that needs more must ask for it.
+permissions:
+  contents: read
 
 jobs:
   test:
