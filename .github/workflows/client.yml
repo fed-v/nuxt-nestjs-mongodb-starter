@@ -13,9 +13,17 @@ on:
 permissions:
   contents: read
 
+# One run at a time per branch. On feature branches, pushing again cancels the
+# older run (saves minutes, avoids stale results). On main a run in progress is
+# never cancelled, so each merge keeps its own result.
+concurrency:
+  group: client-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   test:
     runs-on: ubuntu-latest # A fresh, empty VM for every run.
+    timeout-minutes: 10 # Kill runaway jobs instead of burning free minutes.
 
     defaults:
       run:
