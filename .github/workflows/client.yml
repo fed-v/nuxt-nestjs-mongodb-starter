@@ -74,14 +74,14 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       # Works out the image tags and labels from the commit, e.g.
-      # ghcr.io/<owner>/<repo>/client:sha-a1b2c3d and :latest. It also adds the
+      # ghcr.io/<owner>/<repo>/client:main-a1b2c3d and :latest. It also adds the
       # label that links the package back to this repository.
       - id: meta
         uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}/client
           tags: |
-            type=sha
+            type=sha,prefix={{branch}}-
             type=raw,value=latest
 
       # Same build as before (target + context), but now it also pushes.

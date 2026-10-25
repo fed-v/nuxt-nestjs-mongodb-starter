@@ -27,7 +27,7 @@ FROM base AS dependencies
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm ci
 
 
 ################################################################################
