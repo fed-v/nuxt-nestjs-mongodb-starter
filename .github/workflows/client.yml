@@ -44,3 +44,22 @@ jobs:
 
       # `--run` = run once and exit (plain `vitest` waits in watch mode).
       - run: npm test -- --run
+
+  # Builds the production Docker image to prove the Dockerfile works.
+  # Nothing is published yet.
+  build:
+    # Jobs run in parallel by default. `needs` makes this wait for `test`,
+    # and skips it entirely if `test` fails.
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # Each job gets its own fresh VM, so it must check out the code again.
+      # Nothing carries over from the `test` job.
+      - uses: actions/checkout@v7
+
+      # Plain `docker build`: a CI step is just a shell command.
+      # --target production builds the last stage of client/Dockerfile.
+      # ./client is the build context (the folder Docker can see).
+      - run: docker build --target production --tag client:ci ./client
