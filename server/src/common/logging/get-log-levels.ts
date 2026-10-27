@@ -12,8 +12,6 @@ export function getLogLevels(logLevel = process.env.LOG_LEVEL): LogLevel[] {
       return ['error', 'warn', 'log'];
     case 'debug':
       return ['error', 'warn', 'log', 'debug'];
-    case 'verbose':
-      return logLevels;
     default:
       return logLevels;
   }

@@ -4,6 +4,7 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ApiErrorResponse } from '../interfaces/api-response.interface';
@@ -15,8 +16,26 @@ type ExceptionResponse = {
   details?: unknown;
 };
 
+const STATUS_ERRORS: Record<number, { code: string; message: string }> = {
+  [HttpStatus.BAD_REQUEST]: { code: 'BAD_REQUEST', message: 'Bad request' },
+  [HttpStatus.UNAUTHORIZED]: { code: 'UNAUTHORIZED', message: 'Unauthorized' },
+  [HttpStatus.FORBIDDEN]: { code: 'FORBIDDEN', message: 'Forbidden' },
+  [HttpStatus.NOT_FOUND]: { code: 'NOT_FOUND', message: 'Not found' },
+  [HttpStatus.CONFLICT]: { code: 'CONFLICT', message: 'Conflict' },
+  [HttpStatus.UNPROCESSABLE_ENTITY]: {
+    code: 'UNPROCESSABLE_ENTITY',
+    message: 'Unprocessable entity',
+  },
+  [HttpStatus.TOO_MANY_REQUESTS]: {
+    code: 'TOO_MANY_REQUESTS',
+    message: 'Too many requests',
+  },
+};
+
 @Catch()
 export class ApiExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(ApiExceptionFilter.name);
+
   catch(exception: unknown, host: ArgumentsHost) {
     const context = host.switchToHttp();
     const response = context.getResponse<Response>();
@@ -26,6 +45,13 @@ export class ApiExceptionFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
     const exceptionResponse = this.getExceptionResponse(exception);
+
+    if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+      this.logger.error(
+        `${request.method} ${request.url}`,
+        exception instanceof Error ? exception.stack : String(exception),
+      );
+    }
 
     const body: ApiErrorResponse = {
       success: false,
@@ -75,32 +101,20 @@ export class ApiExceptionFilter implements ExceptionFilter {
   }
 
   private getErrorCode(status: number): string {
-    switch (status) {
-      case HttpStatus.BAD_REQUEST:
-        return 'BAD_REQUEST';
-      case HttpStatus.UNAUTHORIZED:
-        return 'UNAUTHORIZED';
-      case HttpStatus.FORBIDDEN:
-        return 'FORBIDDEN';
-      case HttpStatus.NOT_FOUND:
-        return 'NOT_FOUND';
-      default:
-        return status >= 500 ? 'INTERNAL_ERROR' : 'API_ERROR';
-    }
+    return (
+      STATUS_ERRORS[status]?.code ??
+      (status >= HttpStatus.INTERNAL_SERVER_ERROR
+        ? 'INTERNAL_ERROR'
+        : 'API_ERROR')
+    );
   }
 
   private getDefaultMessage(status: number): string {
-    switch (status) {
-      case HttpStatus.BAD_REQUEST:
-        return 'Bad request';
-      case HttpStatus.UNAUTHORIZED:
-        return 'Unauthorized';
-      case HttpStatus.FORBIDDEN:
-        return 'Forbidden';
-      case HttpStatus.NOT_FOUND:
-        return 'Not found';
-      default:
-        return status >= 500 ? 'Internal server error' : 'Request failed';
-    }
+    return (
+      STATUS_ERRORS[status]?.message ??
+      (status >= HttpStatus.INTERNAL_SERVER_ERROR
+        ? 'Internal server error'
+        : 'Request failed')
+    );
   }
 }

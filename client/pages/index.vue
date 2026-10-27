@@ -1,38 +1,37 @@
 <template>
   <div>
-    <h1>{{ message }}</h1>
-    <p v-if="errorMessage">{{ errorMessage }}</p>
+    <h1>{{ greeting }}</h1>
+    <p v-if="greetingError">{{ greetingError }}</p>
+    <p v-if="usersError">{{ usersError }}</p>
     <pre>{{ users }}</pre>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
-import { useApi, type ApiError } from "../composables/useApi";
-import { useUsersApi, type User } from "../composables/useUsersApi";
+import { getErrorMessage } from "../utils/api-error";
+import type { User } from "../composables/useUsersApi";
 
-const message = ref("loading...");
+const greeting = ref("loading...");
 const users = ref<User[]>([]);
-const errorMessage = ref("");
+const greetingError = ref("");
+const usersError = ref("");
 const api = useApi();
 const usersApi = useUsersApi();
 
 // Fetch data from the NestJS API on component mount
 onMounted(async () => {
   try {
-    message.value = await api.get<string>("/api");
+    greeting.value = await api.get<string>("/api");
   } catch (error) {
-    const apiError = error as ApiError;
-    errorMessage.value = apiError.message;
-    console.error("Failed to fetch data:", apiError);
+    greetingError.value = getErrorMessage(error);
+    console.error("Failed to fetch greeting:", error);
   }
 
   try {
     users.value = await usersApi.getUsers();
   } catch (error) {
-    const apiError = error as ApiError;
-    errorMessage.value = apiError.message;
-    console.error("Failed to fetch users:", apiError);
+    usersError.value = getErrorMessage(error);
+    console.error("Failed to fetch users:", error);
   }
 });
 </script>
