@@ -13,9 +13,10 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT') || 4000;
 
-  // Enable CORS
+  // CORS_ORIGIN is a comma-separated allowlist; unset allows every origin
+  const corsOrigin = configService.get<string>('CORS_ORIGIN');
   app.enableCors({
-    origin: '*', // Adjust this as needed
+    origin: corsOrigin ? corsOrigin.split(',').map((o) => o.trim()) : '*',
   });
 
   app.useGlobalFilters(new ApiExceptionFilter());
