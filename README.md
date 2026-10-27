@@ -35,6 +35,10 @@ The backend includes simple global request logging to make debugging easier duri
 
 A GitHub Actions workflow (`.github/workflows/client.yml`) covers the client. On every push that touches `client/` (or from the manual "Run workflow" button), it runs the Vitest suite on Node 22 with a clean `npm ci` install. When that passes on `main`, a second job builds the client's production Docker image and publishes it to GitHub Container Registry (`ghcr.io`), tagged with the commit SHA and `latest`, so any host can pull it. The workflow uses least-privilege token permissions and cancels superseded runs on feature branches. Only the client is covered so far, and deploying the published image to a host is left to whichever service you use.
 
+### 7. Swagger / OpenAPI Documentation
+
+The backend documents itself with `@nestjs/swagger`. Start the server and open `/docs` on the server's port (for example `http://localhost:4000/docs`) for an interactive UI where you can read and try every endpoint, or use `/docs-json` for the raw OpenAPI spec. The Nest CLI Swagger plugin builds request schemas from your DTOs automatically, and two small decorators, `@ApiEnvelopeResponse()` and `@ApiErrorEnvelopeResponse()`, document the shared success and error response format from point 2. New endpoints appear in the docs on their own; add a response DTO and one of those decorators to describe what they return.
+
 ## Docker
 
 Create and start the development container:
