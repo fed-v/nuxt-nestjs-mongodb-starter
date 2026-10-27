@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { AppModule } from './../src/app.module';
 
 describe('AppController (e2e)', () => {
@@ -23,6 +23,12 @@ describe('AppController (e2e)', () => {
     return request(app.getHttpServer())
       .get('/api')
       .expect(200)
-      .expect('Hello from Nest API!');
+      .expect(({ body }) => {
+        expect(body).toMatchObject({
+          success: true,
+          data: 'Hello from Nest API!',
+          path: '/api',
+        });
+      });
   });
 });

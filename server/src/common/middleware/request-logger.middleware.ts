@@ -7,7 +7,16 @@ import { NextFunction, Request, Response } from 'express';
 export class RequestLoggerMiddleware implements NestMiddleware {
   private readonly logger = new Logger(RequestLoggerMiddleware.name);
 
-  constructor(private readonly configService: ConfigService) {}
+  private readonly excludedPaths: string[];
+
+  constructor(private readonly configService: ConfigService) {
+    this.excludedPaths = this.configService
+      .get<string>('REQUEST_LOG_EXCLUDE', '/health')
+      .split(',')
+      .map((excludedPath) => excludedPath.trim())
+      .map((excludedPath) => this.normalizePath(excludedPath))
+      .filter(Boolean);
+  }
 
   use(request: Request, response: Response, next: NextFunction) {
     if (!this.isEnabled() || this.shouldSkip(request.originalUrl)) {
@@ -57,14 +66,8 @@ export class RequestLoggerMiddleware implements NestMiddleware {
 
   private shouldSkip(url: string): boolean {
     const normalizedUrl = this.normalizePath(url);
-    const excludedPaths = this.configService
-      .get<string>('REQUEST_LOG_EXCLUDE', '/health')
-      .split(',')
-      .map((excludedPath) => excludedPath.trim())
-      .map((excludedPath) => this.normalizePath(excludedPath))
-      .filter(Boolean);
 
-    return excludedPaths.some((excludedPath) =>
+    return this.excludedPaths.some((excludedPath) =>
       normalizedUrl.startsWith(excludedPath),
     );
   }
